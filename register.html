@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Daftar - Jadwal Perkuliahan Mahasiswa</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="page-center">
+
+  <main class="card auth-card wide">
+    <div class="auth-top">
+      <h2>Daftar Akun</h2>
+      <p class="muted">Buat akun untuk mengelola jadwalmu</p>
+    </div>
+
+    <form class="form" id="registerForm">
+      <div class="row">
+        <div class="col">
+          <label class="label" for="nama">Nama Lengkap</label>
+          <div class="input-row">
+            <i class="fa-regular fa-user icon-left"></i>
+            <input id="nama" name="nama" type="text" placeholder="Nama lengkap" required />
+          </div>
+        </div>
+        <div class="col">
+          <label class="label" for="nim">NIM</label>
+          <div class="input-row">
+            <i class="fa-regular fa-id-badge icon-left"></i>
+            <input id="nim" name="nim" type="text" placeholder="NIM" required />
+          </div>
+        </div>
+      </div>
+
+      <label class="label" for="email">Email</label>
+      <div class="input-row">
+        <i class="fa-regular fa-envelope icon-left"></i>
+        <input id="email" name="email" type="email" placeholder="email@contoh.com" required />
+      </div>
+
+      <label class="label" for="telpon">No Telepon</label>
+      <div class="input-row">
+        <i class="fa-solid fa-phone icon-left"></i>
+        <input id="telpon" name="telpon" type="tel" placeholder="+62" required />
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label class="label" for="fakultas">Fakultas</label>
+          <div class="input-row">
+            <i class="fa-solid fa-building icon-left"></i>
+            <select id="fakultas" name="fakultas" required>
+              <option value="">Pilih Fakultas</option>
+              <option>Manajemen dan Bisnis</option>
+              <option>Teknik Elektro</option>
+              <option>Teknik Mesin</option>
+              <option>Teknik Informatika</option>
+            </select>
+          </div>
+        </div>
+        <div class="col">
+          <label class="label" for="prodi">Program Studi</label>
+          <div class="input-row">
+            <i class="fa-solid fa-graduation-cap icon-left"></i>
+            <select id="prodi" name="prodi" required>
+              <option value="">Pilih Program Studi</option>
+              <option>Manajemen</option>
+              <option>Akuntansi</option>
+              <option>Teknik Informatika</option>
+              <option>Sistem Informasi</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <label class="label" for="password">Password</label>
+      <div class="input-row">
+        <i class="fa-solid fa-lock icon-left"></i>
+        <input id="password" name="password" type="password" placeholder="Buat password" required />
+        <button type="button" class="icon-btn eye" onclick="togglePasswordField('password', this)" title="Tampilkan/ sembunyikan">
+          <i class="fa-regular fa-eye"></i>
+        </button>
+      </div>
+
+      <button class="btn primary full" type="submit">
+        <i class="fa-solid fa-user-plus"></i> Daftar Sekarang
+      </button>
+
+      <p class="muted small">Sudah punya akun? <a href="login.html">Masuk di sini</a></p>
+    </form>
+  </main>
+
+  <!-- 🔥 SCRIPT DENGAN PENYIMPANAN SEMUA DATA USER -->
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const requiredFields = ['nama', 'nim', 'email', 'telpon', 'fakultas', 'prodi', 'password'];
+      for (const id of requiredFields) {
+        const field = document.getElementById(id);
+        if (!field.value.trim()) {
+          alert('Harap isi semua data sebelum melanjutkan.');
+          field.focus();
+          return;
+        }
+      }
+
+      const userData = {
+        nama: document.getElementById('nama').value.trim(),
+        nim: document.getElementById('nim').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        telpon: document.getElementById('telpon').value.trim(),
+        fakultas: document.getElementById('fakultas').value,
+        prodi: document.getElementById('prodi').value,
+        password: document.getElementById('password').value.trim()
+      };
+
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      const nimExists = users.some(u => u.nim === userData.nim);
+      if (nimExists) {
+        alert('NIM sudah terdaftar. Silakan login.');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      users.push(userData);
+      localStorage.setItem('users', JSON.stringify(users));
+
+      alert('Pendaftaran berhasil! Silakan login.');
+      window.location.href = 'login.html';
+    });
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>
