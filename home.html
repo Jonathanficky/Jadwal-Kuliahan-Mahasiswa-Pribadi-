@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Beranda - Jadwal Perkuliahan Mahasiswa</title>
+
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 16px;
+        padding: 18px;
+      }
+
+      .calendar-week {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .calendar-day {
+        padding: 8px;
+        border-radius: 6px;
+        background: #f5f5f5;
+        cursor: pointer;
+      }
+
+      .calendar-day.has-event {
+        background: #e8f7ff;
+        font-weight: 600;
+      }
+
+      .day-name {
+        font-size: 0.95rem;
+      }
+
+      .day-content {
+        font-size: 0.85rem;
+        color: #444;
+      }
+
+      .list-item {
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- NAVBAR -->
+    <header class="topbar">
+  <div class="brand">Jadwal Perkuliahan Mahasiswa</div>
+
+  <nav class="nav">
+    <a href="home.html" class="nav-link"><i class="fa-solid fa-house"></i> Beranda</a>
+    <a href="jadwal.html" class="nav-link"><i class="fa-regular fa-calendar-days"></i> Jadwal</a>
+    <a href="aktivitas.html" class="nav-link"><i class="fa-solid fa-list-check"></i> Aktivitas</a>
+  </nav>
+
+  <div class="actions">
+    <div class="dropdown" id="opts-home">
+      <button class="btn ghost">
+        <i class="fa-solid fa-gear"></i>
+      </button>
+      <div class="dropdown-menu">
+        <a href="profil.html"><i class="fa-regular fa-user"></i> Profil</a>
+        <a href="password.html"><i class="fa-solid fa-key"></i> Ubah Password</a>
+        <a href="#" onclick="logoutUser()"><i class="fa-solid fa-right-from-bracket"></i> Keluar</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+    <main class="container content-grid">
+      <section class="card wide">
+        <div class="card-head">
+          <h3><i class="fa-regular fa-calendar"></i> Jadwal Hari Ini</h3>
+          <p class="muted" id="todayLabel">—</p>
+        </div>
+
+        <div class="card-body flow" id="homeActivities">
+          <p class="muted">Tidak ada jadwal untuk hari ini.</p>
+        </div>
+      </section>
+
+      <aside class="card narrow">
+        <h4><i class="fa-regular fa-calendar-days"></i> Kalender Minggu Ini</h4>
+        <div id="calendarWeek" class="calendar-week" aria-live="polite"></div>
+
+        <h4><i class="fa-solid fa-chart-simple"></i> Ringkasan Aktivitas</h4>
+        <div id="summaryList" class="flow"></div>
+      </aside>
+    </main>
+
+    <script>
+      // ✅ Cek status login sinkron dengan login.html
+      function checkLoginStatus() {
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+
+        if (isLoggedIn !== "true" || !currentUser) {
+          alert("Silakan login terlebih dahulu.");
+          window.location.href = "login.html";
+          return;
+        }
+        console.log("User aktif:", currentUser.nama);
+      }
+
+      // ✅ Fungsi logout
+      function logoutUser() {
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("loggedInUser");
+        localStorage.removeItem("currentUser");
+        alert("Anda telah logout.");
+        window.location.href = "login.html";
+      }
+
+      // Jalankan saat halaman dimuat
+      document.addEventListener("DOMContentLoaded", function () {
+        checkLoginStatus();
+
+        const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        const today = new Date();
+        const todayLabel = document.getElementById("todayLabel");
+        const homeActivities = document.getElementById("homeActivities");
+        const calendarWeek = document.getElementById("calendarWeek");
+        const summaryList = document.getElementById("summaryList");
+
+        try {
+          todayLabel.textContent =
+            hari[today.getDay()] + ", " + today.toLocaleDateString("id-ID");
+        } catch (e) {
+          todayLabel.textContent = "Hari ini";
+          console.warn("Gagal set tanggal user-locale:", e);
+        }
+
+        let jadwal = [];
+        try {
+          const raw = localStorage.getItem("jadwalMahasiswa");
+          if (raw) {
+            jadwal = JSON.parse(raw);
+            if (!Array.isArray(jadwal)) jadwal = [];
+          }
+        } catch (e) {
+          console.warn("Gagal membaca localStorage jadwalMahasiswa:", e);
+          jadwal = [];
+        }
+
+        function renderToday() {
+          homeActivities.innerHTML = "";
+          const dayName = hari[today.getDay()];
+          const jadwalHariIni = jadwal.filter((item) => item.hari === dayName);
+
+          if (jadwalHariIni.length === 0) {
+            homeActivities.innerHTML =
+              '<p class="muted">Tidak ada jadwal untuk hari ini.</p>';
+            return;
+          }
+
+          jadwalHariIni.forEach((item) => {
+            const el = document.createElement("div");
+            el.className = "list-item";
+            el.innerHTML =
+              "<strong>" +
+              escapeHtml(item.mataKuliah) +
+              "</strong><br>" +
+              "<span>" +
+              escapeHtml(item.jamMulai) +
+              " - " +
+              escapeHtml(item.jamSelesai) +
+              "</span> | " +
+              escapeHtml(item.ruangan) +
+              "<br>" +
+              "<small>" +
+              escapeHtml(item.dosen) +
+              "</small><br>" +
+              (item.catatan ? "<em>" + escapeHtml(item.catatan) + "</em>" : "");
+            homeActivities.appendChild(el);
+          });
+        }
+
+        function renderWeek() {
+          calendarWeek.innerHTML = "";
+          const startOfWeek = new Date(today);
+          const offsetToMonday = today.getDay() === 0 ? 1 : 1 - today.getDay();
+          startOfWeek.setDate(today.getDate() + offsetToMonday);
+
+          for (let i = 0; i < 6; i++) {
+            const d = new Date(startOfWeek);
+            d.setDate(startOfWeek.getDate() + i);
+
+            const dayName = hari[d.getDay()];
+            const jadwalHarian = jadwal.filter((j) => j.hari === dayName);
+
+            const dayEl = document.createElement("div");
+            dayEl.className = "calendar-day" + (jadwalHarian.length ? " has-event" : "");
+
+            const nameEl = document.createElement("div");
+            nameEl.className = "day-name";
+            nameEl.textContent = dayName;
+
+            const contentEl = document.createElement("div");
+            contentEl.className = "day-content";
+            contentEl.textContent = jadwalHarian.length
+              ? jadwalHarian.length + " Mata Kuliah"
+              : "-";
+
+            dayEl.appendChild(nameEl);
+            dayEl.appendChild(contentEl);
+
+            dayEl.addEventListener("click", function () {
+              const lines = jadwalHarian.map(
+                (j) => "- " + j.mataKuliah + " (" + j.jamMulai + ")"
+              );
+              alert(
+                "📅 Jadwal " +
+                  dayName +
+                  ":\n\n" +
+                  (lines.length ? lines.join("\n") : "Tidak ada jadwal")
+              );
+            });
+
+            calendarWeek.appendChild(dayEl);
+          }
+        }
+
+        function renderSummary() {
+          if (!jadwal.length) {
+            summaryList.innerHTML =
+              '<p class="muted">Belum ada jadwal tersimpan.</p>';
+          } else {
+            const total = jadwal.length;
+            summaryList.innerHTML =
+              "<p>Total mata kuliah tersimpan: <strong>" +
+              total +
+              "</strong></p>";
+          }
+        }
+
+        function escapeHtml(str) {
+          if (!str) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        renderToday();
+        renderWeek();
+        renderSummary();
+        console.debug("jadwal (home):", jadwal);
+      });
+    </script>
+
+    <script src="script.js"></script>
+  </body>
+</html>

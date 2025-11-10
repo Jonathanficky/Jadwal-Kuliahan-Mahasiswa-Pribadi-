@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Profil - Jadwal Perkuliahan Mahasiswa</title>
+
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- ====== HEADER / NAVBAR ====== -->
+    <header class="topbar">
+      <div class="brand">Jadwal Perkuliahan Mahasiswa</div>
+
+      <nav class="nav">
+        <a href="home.html" class="nav-link">
+          <i class="fa-solid fa-house"></i><span>Beranda</span>
+        </a>
+        <a href="jadwal.html" class="nav-link">
+          <i class="fa-regular fa-calendar-days"></i><span>Jadwal</span>
+        </a>
+        <a href="aktivitas.html" class="nav-link">
+          <i class="fa-solid fa-list-check"></i><span>Aktivitas</span>
+        </a>
+      </nav>
+
+      <div class="actions">
+        <div class="dropdown" id="opts-profil">
+          <button class="btn ghost" onclick="toggleDropdown('opts-profil')">
+            <i class="fa-solid fa-gear"></i>
+          </button>
+          <div class="dropdown-menu">
+            <a href="profil.html"><i class="fa-regular fa-user"></i> Profil</a>
+            <a href="password.html"
+              ><i class="fa-solid fa-key"></i> Ubah Password</a
+            >
+            <a href="#" onclick="logoutUser()"
+              ><i class="fa-solid fa-right-from-bracket"></i> Keluar</a
+            >
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ====== MAIN CONTENT ====== -->
+    <main class="container">
+      <section class="card profile-card">
+        <!-- Bagian Kiri -->
+        <div class="profile-left">
+          <div class="avatar-large">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <h3 id="pName">—</h3>
+          <p class="muted" id="pRole">
+            Mahasiswa - <span id="pProdiRole">—</span>
+          </p>
+          <button class="btn primary" onclick="toggleEditProfil()">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Profil
+          </button>
+        </div>
+
+        <!-- Bagian Kanan (Tampilan Profil) -->
+        <div class="profile-right" id="profilDisplay">
+          <div class="info-row">
+            <i class="fa-regular fa-id-card"></i>
+            <strong>NIM:</strong> <span id="pNim">—</span>
+          </div>
+          <div class="info-row">
+            <i class="fa-regular fa-envelope"></i>
+            <strong>Email:</strong> <span id="pEmail">—</span>
+          </div>
+          <div class="info-row">
+            <i class="fa-solid fa-phone"></i>
+            <strong>Telepon:</strong> <span id="pTelp">—</span>
+          </div>
+          <div class="info-row">
+            <i class="fa-solid fa-building-columns"></i>
+            <strong>Fakultas:</strong> <span id="pFak">—</span>
+          </div>
+          <div class="info-row">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <strong>Program Studi:</strong> <span id="pProdi">—</span>
+          </div>
+        </div>
+
+        <!-- Form Edit Profil -->
+        <form
+          class="profile-right"
+          id="profilEdit"
+          style="display: none;"
+          onsubmit="return saveProfil(event)"
+        >
+          <div class="input-row">
+            <i class="fa-regular fa-user icon-left"></i>
+            <input
+              type="text"
+              id="eName"
+              name="nama"
+              placeholder="Nama Lengkap"
+              required
+            />
+          </div>
+
+          <div class="input-row">
+            <i class="fa-regular fa-id-card icon-left"></i>
+            <input
+              type="text"
+              id="eNim"
+              name="nim"
+              placeholder="Nomor Induk Mahasiswa"
+              required
+              readonly
+            />
+          </div>
+
+          <div class="input-row">
+            <i class="fa-regular fa-envelope icon-left"></i>
+            <input
+              type="email"
+              id="eEmail"
+              name="email"
+              placeholder="Alamat Email"
+              required
+            />
+          </div>
+
+          <div class="input-row">
+            <i class="fa-solid fa-phone icon-left"></i>
+            <input
+              type="tel"
+              id="eTelp"
+              name="telepon"
+              placeholder="Nomor Telepon"
+              required
+            />
+          </div>
+
+          <div class="input-row">
+            <i class="fa-solid fa-building-columns icon-left"></i>
+            <input
+              type="text"
+              id="eFak"
+              name="fakultas"
+              placeholder="Fakultas"
+              required
+            />
+          </div>
+
+          <div class="input-row">
+            <i class="fa-solid fa-graduation-cap icon-left"></i>
+            <input
+              type="text"
+              id="eProdi"
+              name="prodi"
+              placeholder="Program Studi"
+              required
+            />
+          </div>
+
+          <div class="row">
+            <button type="submit" class="btn full primary">
+              <i class="fa-solid fa-check"></i> Simpan
+            </button>
+            <button type="button" class="btn full" onclick="toggleEditProfil()">
+              <i class="fa-solid fa-xmark"></i> Batal
+            </button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <!-- ====== SCRIPT ====== -->
+    <script>
+      // === Ambil data user dari localStorage ===
+      const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+      if (!currentUser) {
+        alert("Silakan login terlebih dahulu.");
+        window.location.href = "login.html";
+      }
+
+      // === Render profil ===
+      function renderProfil() {
+        if (!currentUser) return;
+        document.getElementById("pName").innerText = currentUser.nama;
+        document.getElementById("pNim").innerText = currentUser.nim;
+        document.getElementById("pEmail").innerText = currentUser.email;
+        document.getElementById("pTelp").innerText = currentUser.telpon;
+        document.getElementById("pFak").innerText = currentUser.fakultas;
+        document.getElementById("pProdi").innerText = currentUser.prodi;
+        document.getElementById("pProdiRole").innerText = currentUser.prodi;
+      }
+      renderProfil();
+
+      // === Toggle edit profil ===
+      function toggleEditProfil() {
+        const display = document.getElementById("profilDisplay");
+        const editForm = document.getElementById("profilEdit");
+        const isEditing = editForm.style.display === "block";
+
+        editForm.style.display = isEditing ? "none" : "block";
+        display.style.display = isEditing ? "block" : "none";
+
+        if (!isEditing && currentUser) {
+          // Isi form edit dari data user
+          document.getElementById("eName").value = currentUser.nama;
+          document.getElementById("eNim").value = currentUser.nim;
+          document.getElementById("eEmail").value = currentUser.email;
+          document.getElementById("eTelp").value = currentUser.telpon;
+          document.getElementById("eFak").value = currentUser.fakultas;
+          document.getElementById("eProdi").value = currentUser.prodi;
+        }
+      }
+
+      // === Simpan profil ===
+      function saveProfil(event) {
+        event.preventDefault();
+
+        const updatedUser = {
+          ...currentUser,
+          nama: document.getElementById("eName").value.trim(),
+          email: document.getElementById("eEmail").value.trim(),
+          telpon: document.getElementById("eTelp").value.trim(),
+          fakultas: document.getElementById("eFak").value.trim(),
+          prodi: document.getElementById("eProdi").value.trim(),
+        };
+
+        // Update currentUser di localStorage
+        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+
+        // Update juga data di daftar users
+        let users = JSON.parse(localStorage.getItem("users") || "[]");
+        const idx = users.findIndex((u) => u.nim === updatedUser.nim);
+        if (idx !== -1) users[idx] = updatedUser;
+        localStorage.setItem("users", JSON.stringify(users));
+
+        alert("Profil berhasil diperbarui!");
+        toggleEditProfil();
+        window.location.reload();
+      }
+
+      // === Logout ===
+      function logoutUser() {
+        if (confirm("Yakin ingin keluar?")) {
+          localStorage.removeItem("isLoggedIn");
+          localStorage.removeItem("loggedInUser");
+          localStorage.removeItem("currentUser");
+          window.location.href = "login.html";
+        }
+      }
+    </script>
+
+    <script src="script.js"></script>
+  </body>
+</html>
