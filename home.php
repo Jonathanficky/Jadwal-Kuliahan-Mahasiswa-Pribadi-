@@ -68,7 +68,7 @@ $user = $_SESSION['user'];
   <body>
     <!-- NAVBAR -->
     <header class="topbar">
-      <div class="brand">Jadwal Perkuliahan Mahasiswa</div>
+      <div class="brand">Jadwal Perkuliahan Mahasiswaa</div>
 
       <nav class="nav">
         <a href="home.php" class="nav-link">
