@@ -544,4 +544,83 @@ body {
 PROFILE PAGE (MATCH IMAGE STYLE)
 ================================ */
 
+.profile-card {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  padding: 24px;
+  align-items: stretch;
+}
 
+.profile-left {
+  background: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+}
+
+.avatar-large {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  background: #e5e5e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 48px;
+  color: #666;
+}
+
+.profile-left h3 {
+  margin: 8px 0 4px;
+}
+
+.profile-left .muted {
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.profile-right {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #ddd;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fafafa;
+  font-size: 14px;
+}
+
+.info-row strong {
+  width: 140px;
+  font-weight: 600;
+}
+
+.profile-right input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.profile-right .btn.full {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .profile-card {
+    grid-template-columns: 1fr;
+  }
+}
