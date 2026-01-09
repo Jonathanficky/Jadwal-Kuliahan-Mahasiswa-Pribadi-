@@ -1,263 +1,146 @@
 <?php
 session_start();
-if (!isset($_SESSION['login'])) {
-  header("Location: login.php");
-  exit;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
+require_once __DIR__ . '/config/database.php';
+header('Content-Type: application/json');
+
+if (!isset($_SESSION['nim'])) {
+    http_response_code(401);
+    echo json_encode(['status' => 'error', 'message' => 'Sesi berakhir']);
+    exit;
 }
-?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jadwal - Jadwal Perkuliahan Mahasiswa</title>
 
-  <!-- CSS Eksternal -->
-  <link rel="stylesheet" href="style.css" />
-  <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    rel="stylesheet"
-  />
+$nim = $_SESSION['nim'];
+$user_id = $_SESSION['user_id'];
 
-  <style>
-    /* ===== TABEL MODERN UNTUK JADWAL ===== */
-    #jadwal-list {
-      display: grid;
-      grid-template-columns: 1fr;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #fff;
+// Fungsi cek bentrok yang mendukung pengecualian ID (untuk keperluan UPDATE)
+function cekBentrok($conn, $nim, $hari, $mulai, $selesai, $excludeId = null) {
+    $sql = "SELECT id FROM jadwal_kuliah WHERE nim = ? AND hari = ? AND NOT (jam_selesai <= ? OR jam_mulai >= ?)";
+    if ($excludeId) $sql .= " AND id != ?";
+    $stmt = $conn->prepare($sql);
+    if ($excludeId) { 
+        $stmt->bind_param("ssssi", $nim, $hari, $mulai, $selesai, $excludeId); 
+    } else { 
+        $stmt->bind_param("ssss", $nim, $hari, $mulai, $selesai); 
     }
+    $stmt->execute();
+    return $stmt->get_result()->num_rows > 0;
+}
 
-    .jadwal-header,
-    .jadwal-row {
-      display: grid;
-      grid-template-columns: 1.5fr 0.8fr 0.9fr 0.9fr 1.2fr 0.6fr;
-      align-items: center;
-      padding: 10px 14px;
-      border-bottom: 1px solid #eee;
-    }
+$method = $_SERVER['REQUEST_METHOD'];
 
-    .jadwal-header {
-      background: #f7f7f8;
-      font-weight: bold;
-      color: #333;
-    }
+switch ($method) {
+    case 'GET':
+        // Ambil parameter pencarian jika ada
+        $search = isset($_GET['q']) ? $_GET['q'] : '';
 
-    .jadwal-row:nth-child(even) {
-      background: #fafafa;
-    }
+        if (!empty($search)) {
+            // QUERY PENCARIAN (Filter Mata Kuliah ATAU Dosen)
+            $sql = "SELECT * FROM jadwal_kuliah 
+                    WHERE nim = ? 
+                    AND (mata_kuliah LIKE ? OR dosen LIKE ?) 
+                    ORDER BY FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'), jam_mulai";
+            
+            $stmt = $conn->prepare($sql);
+            $param = "%" . $search . "%";
+            $stmt->bind_param("sss", $nim, $param, $param);
+        } else {
+            // QUERY STANDAR (Tampilkan Semua)
+            $sql = "SELECT * FROM jadwal_kuliah 
+                    WHERE nim = ? 
+                    ORDER BY FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'), jam_mulai";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $nim);
+        }
 
-    .jadwal-row:hover {
-      background: #f0f4ff;
-    }
+        $stmt->execute();
+        echo json_encode($stmt->get_result()->fetch_all(MYSQLI_ASSOC));
+        break;
 
-    .jadwal-row .actions {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-    }
+    case 'POST': // CREATE: Tambah Manual atau Import Excel
+        if (isset($_POST['import']) && $_POST['import'] === 'excel') {
+            try {
+                require_once __DIR__ . '/vendor/autoload.php';
+                $spreadsheet = IOFactory::load($_FILES['file']['tmp_name']);
+                $rows = $spreadsheet->getActiveSheet()->toArray();
+                unset($rows[0]); // Lewati header
+                $count = 0;
+                foreach ($rows as $r) {
+                    if (empty($r[0])) continue;
+                    [$matkul, $dosen, $ruang, $hari, $mulai, $selesai, $catatan] = $r;
+                    if (cekBentrok($conn, $nim, $hari, $mulai, $selesai)) continue;
+                    $stmt = $conn->prepare("INSERT INTO jadwal_kuliah (nim, mata_kuliah, dosen, ruangan, hari, jam_mulai, jam_selesai, catatan, user_id) VALUES (?,?,?,?,?,?,?,?,?)");
+                    $stmt->bind_param("ssssssssi", $nim, $matkul, $dosen, $ruang, $hari, $mulai, $selesai, $catatan, $user_id);
+                    $stmt->execute();
+                    $count++;
+                }
+                echo json_encode(['status' => 'success', 'message' => "$count data berhasil diimport"]);
+            } catch (Exception $e) {
+                echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+            }
+        } else {
+            // Input Manual via Fetch JSON
+            $data = json_decode(file_get_contents("php://input"), true);
+            $matkul = $data['mata_kuliah'] ?? "";
+            $mulai = $data['jam_mulai'] ?? "";
+            $selesai = $data['jam_selesai'] ?? "";
+            $hari = $data['hari'] ?? "";
+            $dosen = $data['dosen'] ?? "";
+            $ruangan = $data['ruangan'] ?? "";
+            $catatan = $data['catatan'] ?? "";
 
-    .jadwal-row button {
-      border: none;
-      background: none;
-      cursor: pointer;
-      font-size: 16px;
-      color: #444;
-      transition: 0.2s;
-    }
+            if (cekBentrok($conn, $nim, $hari, $mulai, $selesai)) {
+                echo json_encode(['status' => 'error', 'message' => 'Jadwal bentrok dengan jam lain!']);
+                exit;
+            }
 
-    .jadwal-row button:hover {
-      color: #007bff;
-    }
+            $stmt = $conn->prepare("INSERT INTO jadwal_kuliah (nim, mata_kuliah, dosen, ruangan, hari, jam_mulai, jam_selesai, catatan, user_id) VALUES (?,?,?,?,?,?,?,?,?)");
+            $stmt->bind_param("ssssssssi", $nim, $matkul, $dosen, $ruangan, $hari, $mulai, $selesai, $catatan, $user_id);
+            if ($stmt->execute()) echo json_encode(['status' => 'success']);
+            else echo json_encode(['status' => 'error', 'message' => 'Gagal menyimpan data']);
+        }
+        break;
 
-    .muted {
-      color: #777;
-    }
+    case 'PUT': // UPDATE: Mengubah data jadwal yang sudah ada
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = $data['id'] ?? null;
+        $matkul = $data['mata_kuliah'] ?? "";
+        $mulai = $data['jam_mulai'] ?? "";
+        $selesai = $data['jam_selesai'] ?? "";
+        $hari = $data['hari'] ?? "";
+        $dosen = $data['dosen'] ?? "";
+        $ruangan = $data['ruangan'] ?? "";
+        $catatan = $data['catatan'] ?? "";
 
-    @media (max-width: 768px) {
-      .jadwal-header,
-      .jadwal-row {
-        grid-template-columns: 1fr 1fr;
-        grid-row-gap: 4px;
-      }
-    }
-  </style>
-</head>
+        if (!$id) {
+            echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan']);
+            exit;
+        }
 
-<body>
-  <!-- NAVBAR -->
-  <header class="topbar">
-    <div class="brand">Jadwal Perkuliahan Mahasiswa</div>
+        // Validasi bentrok dengan mengecualikan ID jadwal saat ini
+        if (cekBentrok($conn, $nim, $hari, $mulai, $selesai, $id)) {
+            echo json_encode(['status' => 'error', 'message' => 'Update gagal, jam baru bentrok dengan jadwal lain!']);
+            exit;
+        }
 
-    <nav class="nav">
-      <a href="home.php" class="nav-link">
-        <i class="fa-solid fa-house"></i> Beranda
-      </a>
-      <a href="jadwal.php" class="nav-link active">
-        <i class="fa-regular fa-calendar-days"></i> Jadwal
-      </a>
-      <a href="aktivitas.php" class="nav-link">
-        <i class="fa-solid fa-list-check"></i> Aktivitas
-      </a>
-    </nav>
+        $stmt = $conn->prepare("UPDATE jadwal_kuliah SET mata_kuliah=?, dosen=?, ruangan=?, hari=?, jam_mulai=?, jam_selesai=?, catatan=? WHERE id=? AND nim=?");
+        $stmt->bind_param("sssssssis", $matkul, $dosen, $ruangan, $hari, $mulai, $selesai, $catatan, $id, $nim);
+        
+        if ($stmt->execute()) {
+            echo json_encode(['status' => 'success']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Gagal mengupdate data']);
+        }
+        break;
 
-    <div class="actions">
-      <div class="dropdown" id="opts-home">
-        <button class="btn ghost">
-          <i class="fa-solid fa-gear"></i>
-        </button>
-        <div class="dropdown-menu">
-          <a href="profil.php"><i class="fa-regular fa-user"></i> Profil</a>
-          <a href="password.php"><i class="fa-solid fa-key"></i> Ubah Password</a>
-          <a href="logout.php">
-            <i class="fa-solid fa-right-from-bracket"></i> Keluar
-          </a>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- MAIN CONTENT -->
-  <main class="container">
-    <section class="card full">
-      <div class="card-head">
-        <h3><i class="fa-regular fa-calendar"></i> Jadwal Kuliah Mingguan</h3>
-        <p class="muted">
-          Tambah jadwal secara manual atau impor dari file untuk menampilkan seluruh kegiatan kuliahmu.
-        </p>
-      </div>
-
-      <!-- FORM TAMBAH JADWAL -->
-      <div class="form-inline form-schedule">
-        <input type="text" id="matkul" placeholder="Nama Mata Kuliah" />
-        <input type="text" id="dosen" placeholder="Nama Dosen" />
-        <input type="text" id="ruang" placeholder="Ruang" />
-
-        <select id="hari">
-          <option value="">Pilih Hari</option>
-          <option>Senin</option>
-          <option>Selasa</option>
-          <option>Rabu</option>
-          <option>Kamis</option>
-          <option>Jumat</option>
-          <option>Sabtu</option>
-          <option>Minggu</option>
-        </select>
-
-        <input type="time" id="jamMulai" />
-        <input type="time" id="jamSelesai" />
-        <input type="text" id="catatan" placeholder="Catatan (opsional)" />
-
-        <button class="btn primary" onclick="addSchedule()">
-          <i class="fa-solid fa-plus"></i> Tambah
-        </button>
-      </div>
-
-      <!-- IMPOR FILE -->
-      <div class="import-area">
-        <label for="fileInput" class="btn ghost">
-          <i class="fa-solid fa-file-import"></i> Impor Jadwal
-        </label>
-        <input
-          type="file"
-          id="fileInput"
-          accept=".csv,.json"
-          style="display: none"
-          onchange="importSchedule(event)"
-        />
-        <p class="muted small">
-          Format file yang didukung: .csv atau .json
-        </p>
-      </div>
-
-      <!-- GRID JADWAL -->
-      <div class="week-grid" id="weekGrid"></div>
-
-      <!-- DAFTAR JADWAL -->
-      <div class="card full" style="margin-top: 24px">
-        <div class="card-head">
-          <h3><i class="fa-solid fa-table-list"></i> Daftar Jadwal Kuliah</h3>
-          <p class="muted small">
-            Edit atau hapus jadwal yang sudah kamu tambahkan.
-          </p>
-        </div>
-
-        <div id="jadwal-list">
-          <div class="jadwal-header">
-            <span>Mata Kuliah</span>
-            <span>Hari</span>
-            <span>Jam</span>
-            <span>Ruang</span>
-            <span>Catatan</span>
-            <span>Aksi</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <script src="script.js"></script>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      if (typeof renderSchedule === "function") renderSchedule();
-    });
-
-    const oldRenderSchedule = window.renderSchedule;
-
-    window.renderSchedule = function () {
-      const container = document.getElementById("jadwal-list");
-      if (!container) return;
-
-      const data = getData("jadwalMahasiswa");
-      if (!data.length) {
-        container.innerHTML = `
-          <div class="jadwal-header">
-            <span>Mata Kuliah</span>
-            <span>Hari</span>
-            <span>Jam</span>
-            <span>Ruang</span>
-            <span>Catatan</span>
-            <span>Aksi</span>
-          </div>
-          <p class="muted" style="padding:10px;">Belum ada jadwal ditambahkan.</p>
-        `;
-        return;
-      }
-
-      container.innerHTML = `
-        <div class="jadwal-header">
-          <span>Mata Kuliah</span>
-          <span>Hari</span>
-          <span>Jam</span>
-          <span>Ruang</span>
-          <span>Catatan</span>
-          <span>Aksi</span>
-        </div>
-        ${data.map(j => `
-          <div class="jadwal-row">
-            <span>
-              <strong>${escapeHtml(j.mataKuliah)}</strong><br>
-              <span class="muted">${escapeHtml(j.dosen || "-")}</span>
-            </span>
-            <span>${escapeHtml(j.hari)}</span>
-            <span>${escapeHtml(j.jamMulai)} - ${escapeHtml(j.jamSelesai)}</span>
-            <span>${escapeHtml(j.ruangan || "-")}</span>
-            <span>${escapeHtml(j.catatan || "-")}</span>
-            <div class="actions">
-              <button onclick="editSchedule(${j.id})">
-                <i class="fa-regular fa-pen-to-square"></i>
-              </button>
-              <button onclick="deleteSchedule(${j.id})">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          </div>
-        `).join("")}
-      `;
-    };
-  </script>
-</body>
-</html>
+    case 'DELETE': // DELETE: Menghapus jadwal
+        $id = $_GET['id'] ?? null;
+        if ($id) {
+            $stmt = $conn->prepare("DELETE FROM jadwal_kuliah WHERE id=? AND nim=?");
+            $stmt->bind_param("is", $id, $nim);
+            if ($stmt->execute()) echo json_encode(['status' => 'success']);
+            else echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus data']);
+        }
+        break;
+}
