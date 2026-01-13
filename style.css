@@ -1,542 +1,671 @@
+/* Import Font Inter (Standar MyStudyLife) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 :root {
-  --primary: #2563eb;
-  --primary-600: #1d4ed8;
-  --bg: #f5f7fb;
-  --card: #ffffff;
-  --muted: #6b7280;
-  --text: #0f172a;
-  --border: #e6e9ef;
-  --radius: 12px;
-  --shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
-  --glass: rgba(255, 255, 255, 0.6);
-  font-size: 16px;
+    --msl-primary: #3b82f6;
+    --msl-success: #10b981;
+    --msl-danger: #f43f5e;
+    --msl-bg: #f3f4f6;
+    --msl-card: #ffffff;
+    --msl-text-main: #111827;
+    --msl-text-muted: #6b7280;
+    --msl-border: #e5e7eb;
+    --radius-msl: 12px;
 }
 
-/* ========== RESET & BASE ========== */
-html,
+/* ========== BASE STYLES ========== */
 body {
-  height: 100%;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--msl-bg);
+    color: var(--msl-text-main);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-body {
-  margin: 0;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  background: linear-gradient(180deg, var(--bg), #eef3fb 120px);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ========== TOPBAR / NAV ========== */
+/* ========== TOPBAR & NAVIGATION ========== */
 .topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 22px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  position: sticky;
-  top: 0;
-  z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 5%;
+    background: #ffffff;
+    border-bottom: 1px solid var(--msl-border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 .brand {
-  font-weight: 700;
-  color: var(--primary);
-  font-size: 1.05rem;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--msl-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
 }
 
-.nav {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
+.nav { display: flex; gap: 0.5rem; }
 
 .nav-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none;
-  color: var(--muted);
-  padding: 8px 12px;
-  border-radius: 10px;
-  transition: all 0.18s ease;
-  font-size: 0.95rem;
+    text-decoration: none;
+    color: var(--msl-text-muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s;
 }
 
-.nav-link i {
-  font-size: 0.94rem;
+.nav-link:hover { background: #f9fafb; color: var(--msl-primary); }
+.nav-link.active { background: rgba(59, 130, 246, 0.1); color: var(--msl-primary); }
+
+/* ========== GEAR DROPDOWN ========== */
+.header-right { display: flex; align-items: center; gap: 15px; }
+.user-greeting { font-size: 0.95rem; color: var(--msl-text-main); }
+.dropdown-settings { position: relative; }
+
+.gear-btn {
+    background: #ffffff;
+    border: 1px solid var(--msl-border);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--msl-text-muted);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.nav-link:hover {
-  background: var(--primary);
-  color: #fff;
-}
-
-.nav-link.active {
-  background: linear-gradient(90deg, var(--primary), var(--primary-600));
-  color: #fff;
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-  z-index: 10;
-}
-
-/* ========== BUTTONS ========== */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  background: transparent;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: all 0.14s ease;
-}
-
-.btn.small {
-  padding: 6px 10px;
-  font-size: 0.85rem;
-}
-
-.btn.ghost {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid rgba(15, 23, 42, 0.04);
-}
-
-.btn.primary {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-}
-
-.btn.primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12);
-}
-
-.btn.ghost:hover {
-  background: #f2f6ff;
-}
-
-/* ========== DROPDOWN (GEAR FIXED) ========== */
-.dropdown {
-  position: relative;
-}
-
-.dropdown .btn.ghost i.fa-gear {
-  font-size: 1.1rem;
-}
+.gear-btn:hover { background: #f1f5f9; color: var(--msl-primary); transform: rotate(30deg); }
 
 .dropdown-menu {
-  position: absolute;
-  right: 0;
-  top: 120%;
-  min-width: 190px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  display: none;
-  flex-direction: column;
-  padding: 6px;
-  z-index: 9999;
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 45px;
+    background: white;
+    min-width: 150px;
+    border-radius: 10px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--msl-border);
+    z-index: 1000;
+    padding: 5px;
 }
 
-.dropdown.show .dropdown-menu,
-.dropdown-menu.show {
-  display: flex;
-}
+.dropdown-settings.active .dropdown-menu { display: block; animation: fadeIn 0.2s ease-out; }
 
 .dropdown-menu a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  border-radius: 8px;
-  color: var(--text);
-  text-decoration: none;
-  transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    text-decoration: none;
+    color: var(--msl-text-main);
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: background 0.2s;
 }
 
-.dropdown-menu a:hover {
-  background: #f4f7ff;
+.dropdown-menu a:hover { background: #f1f5f9; }
+.menu-divider { border: 0; border-top: 1px solid #f1f5f9; margin: 5px 0; }
+.logout-item:hover { color: var(--msl-danger) !important; background: #fef2f2 !important; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* ========== LAYOUT CONTAINER ========== */
+/* ========== DASHBOARD LAYOUT & CARDS ========== */
 .container {
-  width: 100%;
-  max-width: 1100px;
-  margin: 26px auto;
-  padding: 0 18px;
-  flex: 1;
+    max-width: 1100px;
+    width: 95%;
+    margin: 2rem auto;
 }
 
-/* ========== CARD ========== */
-.card {
-  background: var(--card);
-  border-radius: 14px;
-  padding: 18px;
-  box-shadow: var(--shadow);
-  border: 1px solid rgba(16, 24, 40, 0.03);
-  margin-bottom: 18px;
-}
-
-.card-head h3 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.05rem;
-}
-
-.card-head p.muted {
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
-/* ========== GRID HELPERS ========== */
 .content-grid {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 18px;
-  align-items: start;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+    align-items: start;
 }
 
-@media (max-width: 980px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
+.card {
+    background: var(--msl-card);
+    border-radius: var(--radius-msl);
+    border: 1px solid var(--msl-border);
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
 }
 
-/* ========== FORM INLINE ========== */
-.form-inline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
+.card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 15px;
 }
 
-.form-inline input,
-.form-inline select,
-.form-inline textarea {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: transparent;
-  font-size: 0.95rem;
-  min-width: 0;
+.card-head h3 { margin: 0; font-size: 1.1rem; }
+.muted { color: var(--msl-text-muted); font-size: 0.9rem; margin: 4px 0 0; }
+
+/* Dashboard Badges */
+.dashboard-status { display: flex; gap: 8px; }
+.badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.b-blue { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+.b-green { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+
+/* Item Jadwal */
+.schedule-item {
+    display: flex;
+    gap: 15px;
+    padding: 1.25rem;
+    background: #ffffff;
+    border: 1px solid var(--msl-border);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.form-inline input:focus,
-.form-inline select:focus,
-.form-inline textarea:focus {
-  outline: none;
-  border-color: rgba(37, 99, 235, 0.45);
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.06);
+.schedule-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: var(--msl-primary);
 }
 
-/* ========== INPUT ROW (AUTH & PROFILE) ========== */
-.input-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  padding: 6px 8px;
-  background: transparent;
+.time-tag {
+    background: var(--msl-bg);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    height: fit-content;
+    white-space: nowrap;
 }
 
-.input-row .icon-left {
-  color: var(--muted);
-  min-width: 18px;
+.schedule-info h4 { margin: 0 0 4px; font-size: 1rem; }
+.schedule-info p { margin: 0; font-size: 0.85rem; color: var(--msl-text-muted); }
+
+/* ========== MANAJEMEN INPUT (JADWAL & AKTIVITAS) ========== */
+/* Styling Form Input Horizontal */
+form.form-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
 }
 
-.input-row input,
-.input-row select {
-  border: none;
-  background: transparent;
-  flex: 1;
-  padding: 8px 6px;
-  font-size: 0.95rem;
+form.form-grid .form-group {
+    flex: 1;
+    min-width: 150px;
+    margin-bottom: 0;
 }
 
-.icon-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 8px;
+/* Custom File Input Styling */
+input[type="file"] {
+    font-size: 0.85rem;
+    color: var(--msl-text-muted);
 }
 
-/* ========== ACTIVITY LIST ========== */
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 6px;
+input[type="file"]::file-selector-button {
+    background: #ffffff;
+    border: 1px solid var(--msl-border);
+    padding: 8px 16px;
+    border-radius: 8px;
+    color: var(--msl-text-main);
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 15px;
+    transition: all 0.2s;
 }
 
-.activity-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #ffffff, #fbfdff);
-  border: 1px solid var(--border);
+input[type="file"]::file-selector-button:hover {
+    background: #f1f5f9;
+    border-color: var(--msl-primary);
 }
 
-.activity-item .info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+/* Tombol Inline Estetik */
+.btn-inline {
+    background: var(--msl-primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
 }
 
-.activity-item .muted {
-  color: var(--muted);
-  font-size: 0.9rem;
+.btn-inline:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.2);
 }
 
-.activity-item .actions button {
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 8px;
+/* ========== AUTH & FORM INPUT GROUP (FIXED) ========== */
+.input-group { 
+    position: relative; 
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 1.2rem; /* Jarak antar input lebih lega */
+    width: 100%;
 }
 
-.activity-item .actions button:hover {
-  color: var(--primary);
+/* Mengatur Ikon di Sebelah Kiri agar tidak menabrak teks */
+.input-group > i:not(.fa-eye):not(.fa-eye-slash) {
+    position: absolute;
+    left: 16px; /* Posisi ikon tetap di kiri */
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    z-index: 5; /* Menaikkan z-index agar di atas input */
+    pointer-events: none;
+    font-size: 1.1rem;
 }
 
-/* ========== WEEK GRID (JADWAL) ========== */
-.week-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-top: 14px;
+/* PERBAIKAN UTAMA: Padding kiri ditambah agar teks tidak menabrak ikon */
+.input-group input, 
+.input-group select {
+    width: 100%;
+    /* 48px pada bagian kiri sangat penting agar teks mulai setelah ikon */
+    padding: 12px 16px 12px 48px !important; 
+    border: 1.5px solid var(--msl-border);
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    outline: none;
+    box-sizing: border-box;
+    background-color: #ffffff;
 }
 
-@media (max-width: 1100px) {
-  .week-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+/* State Focus */
+.input-group input:focus {
+    border-color: var(--msl-primary);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-@media (max-width: 520px) {
-  .week-grid {
-    grid-template-columns: 1fr;
-  }
+/* Perbaikan Eye Toggle (Password) */
+.eye-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--msl-text-muted);
+    z-index: 6;
 }
 
-.day-card {
-  padding: 12px;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #fff, #fbfdff);
-  border: 1px solid var(--border);
-  min-height: 120px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* ========== PROFILE PAGE (MODERNIZED) ========== */
+.profile-container { 
+    max-width: 850px; 
+    margin: 0 auto; 
 }
 
-.day-card h4 {
-  margin: 0;
-  color: var(--primary);
-  font-size: 1rem;
+.profile-main-card { 
+    padding: 2.5rem !important; 
+    border-radius: 20px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
 }
 
-.day-card ul {
-  margin: 6px 0 0 14px;
-  padding: 0;
-  list-style: disc;
+.profile-header-info { 
+    display: flex; 
+    align-items: center; 
+    gap: 2.5rem; 
+    margin-bottom: 2.5rem; 
 }
 
-.day-card .item {
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: #f7f9ff;
-  border: 1px solid rgba(37, 99, 235, 0.04);
-  font-size: 0.92rem;
+.avatar-wrapper {
+    font-size: 5rem;
+    color: var(--msl-primary);
+    background: #eff6ff;
+    width: 130px;
+    height: 130px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    border-radius: 50%;
+    border: 4px solid white;
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
 }
 
-/* ========== UTILITIES ========== */
-.muted {
-  color: var(--muted);
+.user-meta h2 {
+    margin: 0 0 5px;
+    font-size: 1.8rem;
+    font-weight: 800;
 }
 
-.small {
-  font-size: 0.85rem;
+.user-meta p {
+    color: var(--msl-text-muted);
+    margin-bottom: 1rem;
+    font-weight: 500;
 }
 
-.divider {
-  height: 1px;
-  background: var(--border);
-  margin: 10px 0;
-  border-radius: 2px;
+.btn-edit-toggle {
+    background: var(--msl-primary);
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
 }
 
-.flow {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.btn-edit-toggle:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* ========== AUTH CARD STYLES ========== */
-.card.auth-card {
-  max-width: 420px;
-  margin: 40px auto;
-  padding: 22px;
+.info-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 2rem 3rem; 
+    border-top: 1px solid var(--msl-border);
+    padding-top: 2rem;
+}
+
+.info-item label { 
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem; 
+    text-transform: uppercase; 
+    font-weight: 800; 
+    color: var(--msl-primary); 
+    margin-bottom: 8px; 
+    letter-spacing: 0.5px;
+}
+
+.info-item p {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--msl-text-main);
+}
+
+/* Penataan Form Edit Profil */
+.edit-form-layout {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--msl-border);
+}
+
+.btn-save {
+    background: var(--msl-primary);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+}
+
+.btn-save:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-cancel {
+    background: white;
+    color: var(--msl-text-muted);
+    border: 1px solid var(--msl-border);
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background: #f8fafc;
+    color: var(--msl-danger);
+    border-color: var(--msl-danger);
+}
+
+/* ========== UTILS ========== */
+.empty-state { text-align: center; padding: 3rem 1rem; color: var(--msl-text-muted); }
+.empty-state i { font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.2; }
+.mt-2 { margin-top: 1rem; }
+.small { font-size: 0.8rem; }
+.italic { font-style: italic; }
+
+@media (max-width: 900px) {
+    .content-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr; }
+}
+
+/* =========================================
+   MODERN FORM INPUTS & ACTIONS (NEW)
+   ========================================= */
+
+/* 1. Styling Input yang Lebih Modern */
+.form-grid input, 
+.form-grid select {
+    background-color: #f9fafb; /* Abu-abu sangat muda */
+    border: 1px solid #e5e7eb;
+    color: #1f2937;
+    border-radius: 10px; /* Sudut lebih membulat */
+    padding: 12px 16px;  /* Ruang dalam lebih lega */
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+}
+
+/* Efek saat input diklik (Fokus) */
+.form-grid input:focus, 
+.form-grid select:focus {
+    background-color: #ffffff;
+    border-color: var(--msl-primary);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); /* Efek Glow Biru */
+    outline: none;
+}
+
+/* 2. Styling Tombol Aksi (Edit/Delete) di List */
+.jadwal-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.action-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%; /* Membuat tombol jadi bulat */
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Tombol Edit (Biru Soft) */
+.btn-edit {
+    background-color: #eff6ff;
+    color: #3b82f6;
+}
+.btn-edit:hover {
+    background-color: #3b82f6;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Tombol Hapus (Merah Soft) */
+.btn-delete {
+    background-color: #fef2f2;
+    color: #ef4444;
+}
+.btn-delete:hover {
+    background-color: #ef4444;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Perbaikan Jarak antar Elemen Form */
+.form-grid {
+    gap: 15px; /* Memberi jarak antar input */
+    margin-top: 10px;
+}
+
+.form-group input[type="time"] {
+    cursor: pointer; /* Menunjukkan bahwa ini bisa diklik */
+}
+
+/* ========== AUTH & LOGIN PAGE STYLES ========== */
+
+/* Memastikan konten berada tepat di tengah layar */
+.page-center {
+    background-color: var(--msl-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Kartu Login */
+.auth-card {
+    background: var(--msl-card);
+    width: 100%;
+    max-width: 400px;
+    padding: 2.5rem;
+    border-radius: 20px;
+    border: 1px solid var(--msl-border);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+/* Bagian Atas (Logo & Judul) */
+.auth-top {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-top .brand {
+    justify-content: center; /* Memastikan logo di tengah */
+    margin-bottom: 0.75rem;
+    font-size: 1.5rem;
 }
 
 .auth-top h2 {
-  margin: 0;
-  font-size: 1.15rem;
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--msl-text-main);
+}
+
+.auth-top p {
+    color: var(--msl-text-muted);
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Grouping Form */
+.form-group {
+    margin-bottom: 1.2rem;
 }
 
 .label {
-  display: block;
-  font-weight: 600;
-  margin-top: 12px;
-  margin-bottom: 6px;
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    color: var(--msl-text-main);
+    text-align: left;
 }
 
-/* ========== PROFILE CARD ========== */
-.profile-card {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 16px;
-  align-items: start;
+/* Tombol Submit Login */
+.btn-auth {
+    width: 100%;
+    background: var(--msl-primary);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 10px;
 }
 
-@media (max-width: 820px) {
-  .profile-card {
-    grid-template-columns: 1fr;
-  }
+.btn-auth:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-.avatar-large {
-  width: 120px;
-  height: 120px;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #eef6ff, #fff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.2rem;
-  color: var(--primary);
-  border: 1px solid var(--border);
+/* Footer Login (Daftar di sini) */
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--msl-text-muted);
 }
 
-/* ========== LIST SMALL ========== */
-.list-item {
-  padding: 8px 6px;
-  border-bottom: 1px dashed rgba(15, 23, 42, 0.04);
-  font-size: 0.95rem;
+.link-auth {
+    color: var(--msl-primary);
+    text-decoration: none;
+    font-weight: 600;
 }
 
-/* ===== Modal Edit ===== */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
+.link-auth:hover {
+    text-decoration: underline;
 }
 
-.modal {
-  background: var(--card);
-  padding: 20px;
-  border-radius: 14px;
-  box-shadow: var(--shadow);
-  width: 90%;
-  max-width: 420px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* Styling Alert Error */
+.alert {
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.modal label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin-top: 6px;
-}
-
-.modal input,
-.modal select {
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.95rem;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.jadwal-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  transition: all 0.2s ease;
-}
-
-.jadwal-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-}
-
-.jadwal-info h4 {
-  margin: 0 0 4px 0;
-  font-size: 15px;
-  color: #333;
-}
-
-.jadwal-info p {
-  margin: 2px 0;
-  font-size: 13px;
-}
-
-.jadwal-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.jadwal-actions button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-  color: #666;
-  transition: color 0.2s ease;
-}
-
-.jadwal-actions button:hover {
-  color: var(--primary, #007bff);
+.error-alert {
+    background: #fef2f2;
+    color: var(--msl-danger);
+    border: 1px solid #fee2e2;
 }

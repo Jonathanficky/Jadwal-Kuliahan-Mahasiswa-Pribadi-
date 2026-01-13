@@ -1,426 +1,397 @@
 /* ============================================================
-script.js (FINAL FIXED + CARD STYLE)
-Compatible with all 7 HTML pages
-Fix: Dropdown gear click (home, jadwal, aktivitas)
-============================================================ */
+   script.js (FINAL VERSION: CRUD + SEARCH + NEW UI)
+   Menghubungkan Frontend JavaScript ke Backend PHP
+   ============================================================ */
 
-/* ---------- Helpers ---------- */
-function getData(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    console.warn("getData err", e);
-    return [];
-  }
-}
-
-function saveData(key, arr) {
-  try {
-    localStorage.setItem(key, JSON.stringify(arr || []));
-  } catch (e) {
-    console.warn("saveData err", e);
-  }
-}
-
-/* ---------- Escape HTML (fixed & secure) ---------- */
+/* ---------- Escape HTML (XSS Protection) ---------- */
 function escapeHtml(str) {
-  if (typeof str !== "string") return str;
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    if (!str) return "";
+    const p = document.createElement('p');
+    p.textContent = str;
+    return p.innerHTML;
 }
 
-/* ---------- Dropdown toggle (global base) ---------- */
-(function () {
-  document.addEventListener("click", (e) => {
-    document.querySelectorAll(".dropdown").forEach((d) => {
-      if (!d.contains(e.target)) d.classList.remove("show");
-    });
-  });
-})();
-
-function toggleDropdown(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const container = el.closest(".dropdown") || el;
-  container.classList.toggle("show");
-}
-
-/* ---------- Nav highlight ---------- */
-function highlightActiveNav() {
-  try {
-    const page = location.pathname.split("/").pop() || "home.html";
+/* ---------- Dropdown Global Handler ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+    // Nav highlight: Menandai menu aktif berdasarkan URL
+    const page = location.pathname.split("/").pop();
     document.querySelectorAll(".nav-link").forEach((a) => {
-      const href = a.getAttribute("href") || "";
-      a.classList.toggle(
-        "active",
-        href === page ||
-          (href === "home.html" && (page === "" || page === "index.html"))
-      );
+        if (a.getAttribute("href") === page) a.classList.add("active");
     });
-  } catch (e) {
-    /* ignore */
-  }
-}
 
-/* ---------- Toggle password visibility ---------- */
-function togglePasswordField(inputId, btn) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  if (input.type === "password") {
-    input.type = "text";
-    btn?.querySelector("i")?.classList.replace("fa-eye", "fa-eye-slash");
-  } else {
-    input.type = "password";
-    btn?.querySelector("i")?.classList.replace("fa-eye-slash", "fa-eye");
-  }
-}
+    // Menutup semua dropdown jika user mengklik di luar area dropdown
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest('.dropdown-settings')) {
+            const gearDropdown = document.getElementById('settingsDropdown');
+            if (gearDropdown) gearDropdown.classList.remove('active');
+        }
 
-/* ============================================================
-ACTIVITIES (aktivitas.html)
-============================================================ */
-function submitActivity() {
-  const name = document.getElementById("act-name")?.value?.trim();
-  const type = document.getElementById("act-type")?.value;
-  const date = document.getElementById("act-date")?.value;
-  const start = document.getElementById("act-start")?.value;
-  const end = document.getElementById("act-end")?.value;
-  const note = document.getElementById("act-note")?.value?.trim() || "";
+        const dropdown = e.target.closest('.dropdown');
+        if (!dropdown) {
+            document.querySelectorAll(".dropdown.active").forEach(d => d.classList.remove("active"));
+        }
+    });
 
-  if (!name || !type || !date || !start || !end) {
-    alert("Harap isi semua kolom penting (Nama, Jenis, Tanggal, Waktu).");
-    return;
-  }
+    // Inisialisasi Render Halaman
+    if (document.getElementById("jadwal-list")) renderSchedule();
+    if (document.getElementById("aktivitas-list")) renderAktivitas();
+});
 
-  const arr = getData("activities");
-  arr.push({ id: Date.now(), name, type, date, start, end, note });
-  saveData("activities", arr);
-  renderActivities();
-  clearActivityForm();
-  renderWeek();
-  renderToday();
-  renderSummary();
-}
-
-function clearActivityForm() {
-  ["act-name", "act-type", "act-date", "act-start", "act-end", "act-note"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
-}
-
-function renderActivities() {
-  const container = document.getElementById("activities");
-  if (!container) return;
-  const data = getData("activities");
-  if (!data.length) {
-    container.innerHTML = '<p class="muted">Belum ada aktivitas ditambahkan.</p>';
-    return;
-  }
-
-  container.innerHTML = data
-    .map(
-      (a) => `
-      <div class="activity-item">
-        <div class="info">
-          <strong>${escapeHtml(a.name)}</strong>
-          <span class="muted">${escapeHtml(a.type)} • ${escapeHtml(a.date)} • ${escapeHtml(a.start)} - ${escapeHtml(a.end)}</span>
-          ${a.note ? `<span class="muted">${escapeHtml(a.note)}</span>` : ""}
-        </div>
-        <div class="actions">
-          <button title="Hapus" onclick="deleteActivity(${a.id})">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-          <button title="Edit" onclick="editActivity(${a.id})">
-            <i class="fa-regular fa-pen-to-square"></i>
-          </button>
-        </div>
-      </div>`
-    )
-    .join("");
-}
-
-function deleteActivity(id) {
-  if (!confirm("Hapus aktivitas ini?")) return;
-  let arr = getData("activities").filter((i) => i.id !== id);
-  saveData("activities", arr);
-  renderActivities();
-  renderWeek();
-  renderToday();
-  renderSummary();
-}
-
-function editActivity(id) {
-  const arr = getData("activities");
-  const it = arr.find((x) => x.id === id);
-  if (!it) return;
-  document.getElementById("act-name").value = it.name || "";
-  document.getElementById("act-type").value = it.type || "";
-  document.getElementById("act-date").value = it.date || "";
-  document.getElementById("act-start").value = it.start || "";
-  document.getElementById("act-end").value = it.end || "";
-  document.getElementById("act-note").value = it.note || "";
-  deleteActivity(id);
-}
-
-/* ============================================================
-SCHEDULE (jadwal.html & home.html)
-============================================================ */
-function addSchedule() {
-  const matkul = document.getElementById("matkul")?.value?.trim();
-  const dosen = document.getElementById("dosen")?.value?.trim();
-  const ruang = document.getElementById("ruang")?.value?.trim();
-  const hari = document.getElementById("hari")?.value;
-  const jamMulai = document.getElementById("jamMulai")?.value;
-  const jamSelesai = document.getElementById("jamSelesai")?.value;
-  const catatan = document.getElementById("catatan")?.value?.trim() || "";
-
-  if (!matkul || !hari || !jamMulai || !jamSelesai) {
-    alert("Lengkapi nama mata kuliah, hari, dan jam.");
-    return;
-  }
-
-  const jadwal = getData("jadwalMahasiswa");
-  jadwal.push({
-    id: Date.now(),
-    mataKuliah: matkul,
-    dosen,
-    ruangan: ruang,
-    hari,
-    jamMulai,
-    jamSelesai,
-    catatan,
-  });
-
-  saveData("jadwalMahasiswa", jadwal);
-  renderWeek();
-  renderToday();
-  renderSummary();
-
-  ["matkul", "dosen", "ruang", "hari", "jamMulai", "jamSelesai", "catatan"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
-}
-
-/* ---------- NEW CARD STYLE RENDER ---------- */
-function renderSchedule() {
-  const container = document.getElementById("jadwal-list");
-  if (!container) return;
-
-  const data = getData("jadwalMahasiswa");
-  if (!data.length) {
-    container.innerHTML = '<p class="muted">Belum ada jadwal ditambahkan.</p>';
-    return;
-  }
-
-  container.innerHTML = data
-    .map(
-      (j) => `
-      <div class="jadwal-card">
-        <div class="jadwal-info">
-          <h4>${escapeHtml(j.mataKuliah)}</h4>
-          <p class="muted">${escapeHtml(j.hari)} • ${escapeHtml(j.jamMulai)} - ${escapeHtml(
-        j.jamSelesai
-      )}</p>
-          <p class="muted">Dosen: ${escapeHtml(j.dosen || "-")}</p>
-          <p class="muted">Ruang: ${escapeHtml(j.ruangan || "-")}</p>
-          ${j.catatan ? `<p class="muted">${escapeHtml(j.catatan)}</p>` : ""}
-        </div>
-        <div class="jadwal-actions">
-          <button title="Edit" onclick="openEditSchedule(${j.id})">
-            <i class="fa-regular fa-pen-to-square"></i>
-          </button>
-          <button title="Hapus" onclick="deleteSchedule(${j.id})">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </div>
-      </div>`
-    )
-    .join("");
-}
-
-function deleteSchedule(id) {
-  if (!confirm("Hapus jadwal ini?")) return;
-  const arr = getData("jadwalMahasiswa").filter((x) => x.id !== id);
-  saveData("jadwalMahasiswa", arr);
-  renderSchedule();
-  renderWeek();
-  renderToday();
-  renderSummary();
-}
-
-/* ============================================================
-IMPORT / EXPORT
-============================================================ */
-function importSchedule(e) {
-  const input = e?.target || document.getElementById("fileInput");
-  if (!input || !input.files?.length) {
-    alert("Pilih file terlebih dahulu.");
-    return;
-  }
-
-  const file = input.files[0];
-  const name = file.name.toLowerCase();
-
-  if (name.endsWith(".json")) return importJSON(file);
-  if (name.endsWith(".csv")) return importCSV(file);
-  if (name.endsWith(".xlsx") || name.endsWith(".xls"))
-    return importExcelFile(file);
-
-  alert("Format file tidak didukung. Gunakan CSV, JSON, atau XLSX.");
-  input.value = "";
-}
-
-/* JSON Import */
-function importJSON(file) {
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    try {
-      const parsed = JSON.parse(ev.target.result);
-      if (!Array.isArray(parsed)) throw new Error("JSON harus array");
-
-      const existing = getData("jadwalMahasiswa").concat(
-        parsed.map((p) => ({ id: Date.now() + Math.random(), ...p }))
-      );
-
-      saveData("jadwalMahasiswa", existing);
-      alert("Impor JSON sukses.");
-      renderWeek();
-      renderToday();
-      renderSummary();
-    } catch (err) {
-      alert("Gagal membaca JSON: " + err.message);
+/* ---------- Toggle Settings Menu (Gear Dropdown) ---------- */
+function toggleSettingsMenu() {
+    const dropdown = document.getElementById('settingsDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('active');
     }
-  };
-  reader.readAsText(file, "UTF-8");
+}
+
+/* ---------- Toggle Password Visibility ---------- */
+function togglePasswordField(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector("i") || document.getElementById("eye-icon");
+    if (!input) return;
+    
+    if (input.type === "password") {
+        input.type = "text";
+        if (icon) icon.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+        input.type = "password";
+        if (icon) icon.classList.replace("fa-eye-slash", "fa-eye");
+    }
 }
 
 /* ============================================================
-AUTH & SESSION
-============================================================ */
-function logoutUser() {
-  if (confirm("Apakah Anda yakin ingin logout?")) {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("loggedInUser");
-    window.location.href = "login.html";
-  }
+   JADWAL KULIAH (CRUD + SEARCH + NEW UI)
+   ============================================================ */
+
+// 1. Fetch Data (Mendukung Keyword Pencarian)
+async function fetchJadwal(keyword = '') {
+    try {
+        const url = keyword ? `jadwal.php?q=${encodeURIComponent(keyword)}` : 'jadwal.php';
+        const response = await fetch(url);
+        return await response.json();
+    } catch (err) {
+        console.error("Gagal mengambil data jadwal:", err);
+        return [];
+    }
 }
 
-function checkLoginStatus() {
-  const loggedIn = localStorage.getItem("isLoggedIn");
-  if (loggedIn !== "true") {
-    alert("Silakan login terlebih dahulu.");
-    window.location.href = "login.html";
-  }
+// 2. Render Jadwal ke HTML (Updated UI)
+async function renderSchedule(keyword = '') {
+    const container = document.getElementById("jadwal-list");
+    if (!container) return;
+
+    // Loading indicator
+    if (keyword) container.innerHTML = '<p class="muted small" style="padding:1rem;">Mencari...</p>';
+
+    const data = await fetchJadwal(keyword);
+
+    if (!data || data.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fa-solid fa-magnifying-glass-minus"></i>
+                <p class="muted">
+                    ${keyword ? `Tidak ditemukan jadwal dengan kata kunci "<strong>${escapeHtml(keyword)}</strong>"` : 'Belum ada jadwal. Silakan tambah manual atau import Excel.'}
+                </p>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = data.map(j => `
+        <div class="schedule-item ${getCourseColorJS(j.mata_kuliah)}">
+            <div class="schedule-info">
+                <span class="time-tag">
+                    <i class="fa-regular fa-clock"></i> 
+                    ${j.jam_mulai.substring(0,5)} - ${j.jam_selesai.substring(0,5)}
+                </span>
+                <h4>${escapeHtml(j.mata_kuliah)}</h4>
+                <p class="muted">
+                    <i class="fa-solid fa-calendar-day"></i> <strong>${j.hari}</strong> 
+                    <span style="margin: 0 5px;">•</span> 
+                    <i class="fa-solid fa-door-open"></i> ${escapeHtml(j.ruangan)}
+                </p>
+                <p class="small muted" style="margin-top:4px;">
+                    <i class="fa-solid fa-user-tie"></i> ${escapeHtml(j.dosen)}
+                </p>
+                ${j.catatan ? `<p class="note small"><em>${escapeHtml(j.catatan)}</em></p>` : ""}
+            </div>
+            
+            <div class="jadwal-actions">
+                <button title="Edit Jadwal" class="action-btn btn-edit" onclick="editSchedule(${j.id})">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+                <button title="Hapus Jadwal" class="action-btn btn-delete" onclick="deleteSchedule(${j.id})">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+    `).join("");
 }
 
-/* ============================================================
-AUTO INIT
-============================================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  highlightActiveNav();
-  renderActivities();
-});
+// 3. Handler Pencarian Real-time
+function searchHandler(keyword) {
+    renderSchedule(keyword);
+}
 
-/* ============================================================
-DROPDOWN GEAR FIX (FINAL UNIVERSAL)
-============================================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".dropdown > .btn.ghost .fa-gear").forEach((icon) => {
-    const btn = icon.closest("button");
-    const dropdown = btn.closest(".dropdown");
-    const menu = dropdown.querySelector(".dropdown-menu");
+// 4. Helper Warna Mata Kuliah
+function getCourseColorJS(name) {
+    const colors = ['blue', 'green', 'red', 'purple', 'orange', 'indigo'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+}
 
-    if (!btn || !menu) return;
-
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      document.querySelectorAll(".dropdown.show").forEach((d) => {
-        if (d !== dropdown) d.classList.remove("show");
-      });
-      dropdown.classList.toggle("show");
+// 5. Delete Jadwal
+async function deleteSchedule(id) {
+    Swal.fire({
+        title: 'Hapus Jadwal?',
+        text: "Data yang dihapus tidak dapat dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`jadwal.php?id=${id}`, { method: 'DELETE' });
+                const res = await response.json();
+                if (res.status === 'success') {
+                    renderSchedule();
+                    Swal.fire('Terhapus!', 'Jadwal berhasil dihapus.', 'success');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Gagal menghapus data.', 'error');
+            }
+        }
     });
-  });
-
-  document.addEventListener("click", () => {
-    document.querySelectorAll(".dropdown.show").forEach((d) => d.classList.remove("show"));
-  });
-});
-
-/* ============================================================
-EDIT JADWAL MODAL (jadwal.html)
-============================================================ */
-function openEditSchedule(id) {
-  const arr = getData("jadwalMahasiswa");
-  const it = arr.find((x) => x.id === id);
-  if (!it) return;
-
-  const modal = document.createElement("div");
-  modal.className = "modal-backdrop";
-  modal.innerHTML = `
-    <div class="modal">
-      <h3>Edit Jadwal</h3>
-      <label>Mata Kuliah</label>
-      <input id="editMatkul" value="${escapeHtml(it.mataKuliah)}">
-      <label>Dosen</label>
-      <input id="editDosen" value="${escapeHtml(it.dosen)}">
-      <label>Ruang</label>
-      <input id="editRuang" value="${escapeHtml(it.ruangan)}">
-      <label>Hari</label>
-      <select id="editHari">
-        ${["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"]
-          .map(h=>`<option ${h===it.hari?"selected":""}>${h}</option>`).join("")}
-      </select>
-      <label>Jam Mulai</label>
-      <input type="time" id="editMulai" value="${it.jamMulai}">
-      <label>Jam Selesai</label>
-      <input type="time" id="editSelesai" value="${it.jamSelesai}">
-      <label>Catatan</label>
-      <input id="editCatatan" value="${escapeHtml(it.catatan||"")}">
-      <div class="modal-actions">
-        <button class="btn primary" onclick="saveEditedSchedule(${id})">Simpan</button>
-        <button class="btn ghost" onclick="this.closest('.modal-backdrop').remove()">Batal</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
 }
 
-function saveEditedSchedule(id) {
-  const arr = getData("jadwalMahasiswa");
-  const idx = arr.findIndex(x => x.id === id);
-  if (idx === -1) return;
+// 6. Edit Jadwal (Siapkan Form)
+async function editSchedule(id) {
+    const response = await fetch('jadwal.php');
+    const allData = await response.json();
+    const item = allData.find(j => j.id == id);
 
-  arr[idx] = {
-    ...arr[idx],
-    mataKuliah: document.getElementById("editMatkul").value.trim(),
-    dosen: document.getElementById("editDosen").value.trim(),
-    ruangan: document.getElementById("editRuang").value.trim(),
-    hari: document.getElementById("editHari").value,
-    jamMulai: document.getElementById("editMulai").value,
-    jamSelesai: document.getElementById("editSelesai").value,
-    catatan: document.getElementById("editCatatan").value.trim(),
-  };
+    if (item) {
+        document.getElementById('matkul').value = item.mata_kuliah;
+        document.getElementById('dosen').value = item.dosen;
+        document.getElementById('ruang').value = item.ruangan;
+        document.getElementById('hari').value = item.hari;
+        document.getElementById('jamMulai').value = item.jam_mulai;
+        document.getElementById('jamSelesai').value = item.jam_selesai;
+        
+        const btn = document.querySelector("#formJadwal button");
+        if(btn) {
+            btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Update Jadwal';
+            btn.onclick = () => updateSchedule(id);
+        }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
 
-  saveData("jadwalMahasiswa", arr);
-  renderSchedule();
-  renderWeek();
-  renderToday();
-  renderSummary();
+// 7. Update Jadwal (Kirim ke Database)
+async function updateSchedule(id) {
+    const data = {
+        id: id,
+        mata_kuliah: document.getElementById('matkul').value,
+        dosen: document.getElementById('dosen').value,
+        ruangan: document.getElementById('ruang').value,
+        hari: document.getElementById('hari').value,
+        jam_mulai: document.getElementById('jamMulai').value,
+        jam_selesai: document.getElementById('jamSelesai').value,
+        catatan: ""
+    };
 
-  document.querySelector(".modal-backdrop")?.remove();
+    try {
+        const response = await fetch('jadwal.php', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const res = await response.json();
+        if (res.status === 'success') {
+            Swal.fire('Terupdate!', 'Jadwal berhasil diubah.', 'success');
+            resetForm();
+            renderSchedule();
+        } else {
+            Swal.fire('Gagal!', res.message, 'error');
+        }
+    } catch (err) {
+        Swal.fire('Error!', 'Gagal menghubungi server.', 'error');
+    }
+}
+
+function resetForm() {
+    document.getElementById('formJadwal').reset();
+    const btn = document.querySelector("#formJadwal button");
+    if(btn) {
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan';
+        btn.onclick = () => addSchedule(); 
+    }
 }
 
 /* ============================================================
-SAFE FALLBACKS (prevent ReferenceError)
-============================================================ */
-function renderWeek() {}
-function renderToday() {}
-function renderSummary() {}
+   AKTIVITAS CRUD (Connect to aktivitas_api.php)
+   ============================================================ */
+
+async function renderAktivitas() {
+    const container = document.getElementById("aktivitas-list");
+    if (!container) return;
+
+    try {
+        const response = await fetch('aktivitas_api.php');
+        const data = await response.json();
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <p class="muted">Belum ada aktivitas. Yuk, tambah kegiatanmu!</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = data.map(item => `
+            <div class="schedule-item" style="border-left: 4px solid #10b981;">
+                <div class="schedule-info">
+                    <h4>${escapeHtml(item.nama_aktivitas)}</h4>
+                    <p class="muted">
+                        <i class="fa-regular fa-calendar"></i> ${formatDateIndo(item.tanggal)} 
+                        ${item.jam ? ` | <i class="fa-regular fa-clock"></i> ${item.jam.substring(0,5)}` : ''}
+                    </p>
+                </div>
+                
+                <div class="jadwal-actions">
+                    <button onclick="editAktivitas(${item.id})" class="action-btn btn-edit" title="Edit">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button onclick="deleteAktivitas(${item.id})" class="action-btn btn-delete" title="Hapus">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+        `).join("");
+
+    } catch (err) {
+        console.error("Gagal load aktivitas:", err);
+    }
+}
+
+async function saveAktivitas() {
+    const id = document.getElementById('act_id').value;
+    const nama = document.getElementById('act_nama').value;
+    const tanggal = document.getElementById('act_tanggal').value;
+    const jam = document.getElementById('act_jam').value;
+
+    if (!nama || !tanggal) {
+        Swal.fire('Error', 'Nama dan Tanggal wajib diisi!', 'warning');
+        return;
+    }
+
+    const data = { id, nama_aktivitas: nama, tanggal, jam };
+    const method = id ? 'PUT' : 'POST'; 
+
+    try {
+        const response = await fetch('aktivitas_api.php', {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const res = await response.json();
+        if (res.status === 'success') {
+            Swal.fire('Berhasil', id ? 'Aktivitas diperbarui' : 'Aktivitas ditambahkan', 'success');
+            resetActForm();
+            renderAktivitas();
+        } else {
+            Swal.fire('Gagal', res.message, 'error');
+        }
+    } catch (err) {
+        Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+    }
+}
+
+async function editAktivitas(id) {
+    const response = await fetch('aktivitas_api.php');
+    const allData = await response.json();
+    const item = allData.find(a => a.id == id);
+
+    if (item) {
+        document.getElementById('act_id').value = item.id;
+        document.getElementById('act_nama').value = item.nama_aktivitas;
+        document.getElementById('act_tanggal').value = item.tanggal;
+        document.getElementById('act_jam').value = item.jam;
+
+        const btn = document.getElementById('btnSaveAct');
+        if(btn) btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Update';
+        
+        const btnCancel = document.getElementById('btnCancelAct');
+        if(btnCancel) btnCancel.style.display = 'inline-block';
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+async function deleteAktivitas(id) {
+    if (!confirm("Hapus aktivitas ini?")) return; 
+
+    try {
+        const response = await fetch(`aktivitas_api.php?id=${id}`, { method: 'DELETE' });
+        const res = await response.json();
+        if (res.status === 'success') renderAktivitas();
+    } catch (err) {
+        alert("Gagal menghapus.");
+    }
+}
+
+function resetActForm() {
+    const form = document.getElementById('formAktivitas');
+    if(form) form.reset();
+    
+    document.getElementById('act_id').value = '';
+    
+    const btn = document.getElementById('btnSaveAct');
+    if(btn) btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan';
+    
+    const btnCancel = document.getElementById('btnCancelAct');
+    if(btnCancel) btnCancel.style.display = 'none';
+}
+
+function formatDateIndo(dateString) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('id-ID', options);
+}
+
+/* ============================================================
+   IMPORT EXCEL
+   ============================================================ */
+async function importExcelFile(input) {
+    if (!input.files.length) return;
+    const formData = new FormData();
+    formData.append('file', input.files[0]);
+    formData.append('import', 'excel');
+
+    try {
+        const response = await fetch('jadwal.php', {
+            method: 'POST',
+            body: formData
+        });
+        const res = await response.json();
+        if (res.status === 'success') {
+            Swal.fire('Berhasil!', res.message, 'success');
+            if(document.getElementById("jadwal-list")) renderSchedule();
+            else location.reload();
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    } catch (err) {
+        Swal.fire('Gagal', 'Gagal mengunggah file.', 'error');
+    }
+}
